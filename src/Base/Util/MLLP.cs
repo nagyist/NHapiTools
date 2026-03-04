@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
+using System.Linq;
 
 namespace NHapiTools.Base.Util
 {
@@ -23,6 +25,12 @@ namespace NHapiTools.Base.Util
             // Strip the message of the MLLP container characters
             sb.Remove(0, 1);
             sb.Remove(sb.Length - 2, 2);
+        }
+        
+        public static byte[] StripMLLPContainer(List<byte> bytes)
+        {
+            // Strip the message of the MLLP container characters
+            return bytes.Skip(1).Take(bytes.Count - 3).ToArray();
         }
 
         /// <summary>

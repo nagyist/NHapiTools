@@ -141,7 +141,7 @@ namespace NHapiTools.Base.Net
                 if (!messageComplete && DateTime.Now.Subtract(startReadingTime).TotalMilliseconds > timeout)
                     throw new TimeoutException($"Reading the HL7 reply timed out after {timeout} milliseconds.");
             }
-            byte[] messageBytes = buffer.Skip(1).Take(buffer.Count - 3).ToArray();
+            byte[] messageBytes = MLLP.StripMLLPContainer(buffer);
             return (encodingForStream ?? Encoding.UTF8).GetString(messageBytes);
         }
 
