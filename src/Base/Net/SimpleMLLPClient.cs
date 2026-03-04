@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Sockets;
 using System.Net.Security;
@@ -118,6 +120,7 @@ namespace NHapiTools.Base.Net
             sw.Flush();
 
             // Read the reply
+            List<byte> buffer = new List<byte>();
             StringBuilder sb = new StringBuilder();
             bool messageComplete = false;
             DateTime startReadingTime = DateTime.Now;
@@ -125,7 +128,10 @@ namespace NHapiTools.Base.Net
             {
                 int b = streamToUse.ReadByte();
                 if (b != -1)
-                    sb.Append((char) b);
+                {
+                    buffer.Add((byte)b);
+                    sb.Append((char)b);
+                }
 
                 messageComplete = MLLP.ValidateMLLPMessage(sb);
 
@@ -135,9 +141,8 @@ namespace NHapiTools.Base.Net
                 if (!messageComplete && DateTime.Now.Subtract(startReadingTime).TotalMilliseconds > timeout)
                     throw new TimeoutException($"Reading the HL7 reply timed out after {timeout} milliseconds.");
             }
-            MLLP.StripMLLPContainer(sb);
-
-            return sb.ToString();
+            byte[] messageBytes = MLLP.StripMLLPContainer(buffer);
+            return (encodingForStream ?? Encoding.UTF8).GetString(messageBytes);
         }
 
         /// <summary>
