@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>NHapiTools</id>
-    <version>2.0.4</version>
+    <version>2.0.5</version>
     <authors>Division by Zero</authors>
     <owners>Division by Zero</owners>
     <license type="expression">MIT</license>
@@ -11,7 +11,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The NHapiTools are tools that will make using NHapi (the open source .Net HL7 implementation) easier. NHapi has a steep learning curve and not everything works as easy as it should. NHapiTools aims to improve that without tampering with NHapi source code.</description>
     <releaseNotes>Solved some issues, updated versioning and added support for nHapi 3.2.2.</releaseNotes>
-    <copyright>Copyright 2021</copyright>
+    <copyright>Copyright 2021 - 2026</copyright>
     <tags>HL7 NHapi NHapiTools</tags>
     <readme>docs\README.md</readme>
     <dependencies>
