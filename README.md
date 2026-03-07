@@ -16,7 +16,7 @@ curve and not everything works as easy as it should. NHapiTools aims to improve 
 
 ## Requirements
 
-NHapiTools currently targets version 4.5 of the .NET Framework
+NHapiTools currently targets versions 8.0 and 10.0 .NET
 
 ## Getting Started
 
