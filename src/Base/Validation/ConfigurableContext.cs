@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 #endif
 using System.Configuration;
+using System.Linq;
 using NHapi.Base.Validation;
 using NHapiTools.Base.Configuration;
 #if NET462
@@ -70,10 +71,10 @@ namespace NHapiTools.Base.Validation
 
         private T ActivateObject<T>(string assemblyName, string classType) where T:class
         {
-            var loadedAssembly = Assembly.Load(assemblyName);
+            var loadedAssembly = System.Reflection.Assembly.Load(assemblyName);
             var type =
                 loadedAssembly.GetTypes()
-                    .SingleOrDefault(
+                    .FirstOrDefault(
                         t => !t.IsAbstract && !t.IsInterface && t.IsClass && t.FullName == classType.Trim());
 
             if (type == null)

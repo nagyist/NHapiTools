@@ -67,7 +67,7 @@ namespace NHapiTools.Tests
             Console.WriteLine("{0} files read.\n", actualFilesRead);
 
             // Assert
-            Assert.AreEqual(expectedFilesRead, actualFilesRead);
+                Assert.AreEqual(expectedFilesRead, actualFilesRead);
             Assert.AreEqual(expectedMessageLength, actualMessageCount);
         }
     }

@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30204.135
@@ -44,9 +44,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHapiTools.Tests", "test\NH
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{D3D362C0-5A95-4054-8DF2-C40370A5593D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NHapiTools.Generator", "tools\NHapiTools.Generator\NHapiTools.Generator.csproj", "{7281E5AB-C84F-4AA0-B0D9-EAB0052209E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHapiTools.Generator", "tools\NHapiTools.Generator\NHapiTools.Generator.csproj", "{7281E5AB-C84F-4AA0-B0D9-EAB0052209E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NHapiTools.Tests.CustomImplementation.V23", "test\NHapiTools.Tests.CustomImplementation.V23\NHapiTools.Tests.CustomImplementation.V23.csproj", "{850CDC71-5157-49BE-B33E-FD67D19D241B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHapiTools.Tests.CustomImplementation.V23", "test\NHapiTools.Tests.CustomImplementation.V23\NHapiTools.Tests.CustomImplementation.V23.csproj", "{850CDC71-5157-49BE-B33E-FD67D19D241B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

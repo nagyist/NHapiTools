@@ -9,6 +9,7 @@ using System.Net.Security;
 using NHapiTools.Base.Util;
 using NHapi.Base.Model;
 using NHapi.Base.Parser;
+using System.Security.Authentication;
 
 namespace NHapiTools.Base.Net
 {
@@ -71,7 +72,7 @@ namespace NHapiTools.Base.Net
             if (cCollection.Count > 0)
             {
                 // A client side certificate was added, authenticate with certificate
-                sslStream.AuthenticateAsClient(serverHostname, cCollection, System.Security.Authentication.SslProtocols.Default, true);
+                sslStream.AuthenticateAsClient(serverHostname, cCollection, SslProtocols.Tls12, true);
             }
             else
                 sslStream.AuthenticateAsClient(serverHostname);

@@ -93,8 +93,10 @@ namespace NHapiTools.Tests
             var xmlMessageStrict = xmlParser.Encode(originalMessage);
             var xmlMessageGeneric = xmlParser.Encode(message);
 
-            Assert.That(xmlMessageStrict, Does.Match(@"^\<ORM_O01.*\<\/ORM_O01\>$"));
-            Assert.That(xmlMessageGeneric, Does.Match(@"^\<GenericMessageWrapper.*\<\/GenericMessageWrapper\>$"));
+            Assert.That(xmlMessageStrict, Does.Match(
+                @"(?s)^\<\?xml[^?]*\?>\r?\n\<ORM_O01[\s\S]*\<\/ORM_O01\>\s*$"));
+            Assert.That(xmlMessageGeneric, Does.Match(
+                @"(?s)^\<\?xml[^?]*\?>\r?\n\<GenericMessageWrapper[\s\S]*\<\/GenericMessageWrapper\>\s*$"));
 
             var zrt = messageWrapper.GetSegment<ISegment>("ZRT");
 
