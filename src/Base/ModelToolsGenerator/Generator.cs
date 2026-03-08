@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+﻿    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using System.Text;
 
-namespace NHapiTools.Base.ModelToolsGenerator
-{
+    namespace NHapiTools.Base.ModelToolsGenerator
+    {
     /// <summary>
     /// Source generation of extension methods on specific Model version assemblies
     /// of NHapi.
@@ -19,6 +19,9 @@ namespace NHapiTools.Base.ModelToolsGenerator
         private string version;
         private string outputDir;
         private StringBuilder messagesOutput, segmentOutput, groupOutput;
+        private readonly HashSet<string> _generatedMessages = new HashSet<string>();
+        private readonly HashSet<string> _generatedSegments = new HashSet<string>();
+        private readonly HashSet<string> _generatedGroups = new HashSet<string>();
 
         #endregion Private properties
 
@@ -49,7 +52,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
         public void Generate()
         {
             Assembly assembly = Assembly.LoadFile(targetAssembly);
-            version = GetVersion(assembly.FullName);
+            version = Generator.GetVersion(assembly.FullName);
 
             ProcessAssembly(assembly);
         }
@@ -58,7 +61,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
 
         #region Private methods
 
-        private string GetVersion(string name)
+        private static string GetVersion(string name)
         {
             int startIndex = name.IndexOf(".V") + 1;
 
@@ -80,26 +83,33 @@ namespace NHapiTools.Base.ModelToolsGenerator
             foreach (Type message in messageTypes)
             {
                 List<string> names = GetPropertyNames(message.GetProperties());
-
-                // Generate methods
                 foreach (string name in names)
                 {
                     MethodInfo mInfo = message.GetMethod(string.Format("Get{0}", name), new Type[] { typeof(int) });
-                    string returnType = mInfo.ReturnType.Name;
+                    if (mInfo == null)
+                        continue;
 
+                    // Skip obsolete methods
+                    if (mInfo.GetCustomAttribute<ObsoleteAttribute>() != null)
+                        continue;
+
+                    // Also check the RepetitionsUsed property
+                    PropertyInfo repProp = message.GetProperty(string.Format("{0}RepetitionsUsed", name));
+                    if (repProp?.GetCustomAttribute<ObsoleteAttribute>() != null)
+                        continue;
+
+                    string returnType = mInfo.ReturnType.Name;
                     GenerateMessageMethods(message.Name, name, returnType);
                 }
             }
-
             AddMessagesFooter();
             SaveMessagesFile();
         }
 
         private void GenerateMessageMethods(string typeName, string name, string returnType)
         {
-            bool exists = messagesOutput.ToString().Contains(string.Format("public static IEnumerable Get{1}Records(this {0} message)", typeName, name));
-
-            if (exists)
+            string key = $"{typeName}.{name}";
+            if (!_generatedMessages.Add(key))
                 return;
 
             bool first = (messagesOutput.Length == 0);
@@ -107,7 +117,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
             if (first)
                 AddMessagesHeader();
             else
-                messagesOutput.Append("\n");
+                _ = messagesOutput.Append('\n');
 
             messagesOutput.Append("        /// <summary>\n");
             messagesOutput.Append(string.Format("        /// Get {1} Records from {0}\n", typeName, name));
@@ -115,14 +125,14 @@ namespace NHapiTools.Base.ModelToolsGenerator
             messagesOutput.Append(string.Format("        public static IEnumerable Get{1}Records(this {0} message)\n", typeName, name));
             messagesOutput.Append("        {\n");
             messagesOutput.Append(string.Format("            object[] result = message.GetRecords(\"{0}RepetitionsUsed\", \"Get{0}\");\n", name));
-            messagesOutput.Append("\n");
+            messagesOutput.Append('\n');
             messagesOutput.Append("            if ((result != null) && (result.Count() > 0))\n");
             messagesOutput.Append("            {\n");
             messagesOutput.Append("                for (int i = 0; i < result.Count(); i++)\n");
             messagesOutput.Append("                    yield return result[i];\n");
             messagesOutput.Append("            }\n");
             messagesOutput.Append("        }\n");
-            messagesOutput.Append("\n");
+            messagesOutput.Append('\n');
             messagesOutput.Append("        /// <summary>\n");
             messagesOutput.Append(string.Format("        /// Get all {1} Records from {0}\n", typeName, name));
             messagesOutput.Append("        /// </summary>\n");
@@ -130,7 +140,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
             messagesOutput.Append("        {\n");
             messagesOutput.Append(string.Format("            return message.GetAllRecords<{1}>(\"{0}RepetitionsUsed\", \"Get{0}\");\n", name, returnType));
             messagesOutput.Append("        }\n");
-            messagesOutput.Append("\n");
+            messagesOutput.Append('\n');
             messagesOutput.Append("        /// <summary>\n");
             messagesOutput.Append(string.Format("        /// Add a new {0} to {1}\n", typeName, name));
             messagesOutput.Append("        /// </summary>\n");
@@ -153,7 +163,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
             messagesOutput.Append(string.Format("using NHapi.Model.{0}.Message;\n", version));
             messagesOutput.Append(string.Format("using NHapi.Model.{0}.Segment;\n", version));
             messagesOutput.Append("using NHapiTools.Base;\n");
-            messagesOutput.Append("\n");
+            messagesOutput.Append('\n');
             messagesOutput.Append(string.Format("namespace NHapiTools.Model.{0}.Message\n", version));
             messagesOutput.Append("{\n");
             messagesOutput.Append("    /// <summary>\n");
@@ -191,33 +201,39 @@ namespace NHapiTools.Base.ModelToolsGenerator
         #endregion Messages
 
         #region Segments
-
         private void ProcessSegments(List<Type> segmentTypes)
         {
             foreach (Type segment in segmentTypes)
             {
                 List<string> names = GetPropertyNames(segment.GetProperties());
-
-                // Generate methods
                 foreach (string name in names)
                 {
                     MethodInfo mInfo = segment.GetMethod($"Get{name}", new Type[] { typeof(int) });
-                    string returnType = mInfo.ReturnType.Name;
+                    if (mInfo == null)
+                        continue;
 
+                    // Skip obsolete methods
+                    if (mInfo.GetCustomAttribute<ObsoleteAttribute>() != null)
+                        continue;
+
+                    // Also check the RepetitionsUsed property
+                    PropertyInfo repProp = segment.GetProperty($"{name}RepetitionsUsed");
+                    if (repProp?.GetCustomAttribute<ObsoleteAttribute>() != null)
+                        continue;
+
+                    string returnType = mInfo.ReturnType.Name;
                     MethodInfo fInfo = segment.GetMethod($"FindField", new Type[] { typeof(string) });
                     GenerateSegmentMethods(segment.Name, name, returnType, fInfo != null);
                 }
             }
-
             AddSegmentsFooter();
             SaveSegmentsFile();
         }
 
         private void GenerateSegmentMethods(string typeName, string name, string returnType, bool findFieldMethodExists = true)
         {
-            bool exists = segmentOutput.ToString().Contains(string.Format("public static IEnumerable Get{1}Records(this {0} message)", typeName, name));
-
-            if (exists)
+            string key = $"{typeName}.{name}";
+            if (!_generatedSegments.Add(key))
                 return;
 
             bool first = (segmentOutput.Length == 0);
@@ -225,7 +241,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
             if (first)
                 AddSegmentsHeader();
             else
-                segmentOutput.Append("\n");
+                segmentOutput.Append('\n');
 
             segmentOutput.Append("        /// <summary>\n");
             segmentOutput.Append(string.Format("        /// Get {1} Records from {0}\n", typeName, name));
@@ -233,14 +249,14 @@ namespace NHapiTools.Base.ModelToolsGenerator
             segmentOutput.Append(string.Format("        public static IEnumerable Get{1}Records(this {0} message)\n", typeName, name));
             segmentOutput.Append("        {\n");
             segmentOutput.Append(string.Format("            object[] result = message.GetRecords(\"{0}RepetitionsUsed\", \"Get{0}\");\n", name));
-            segmentOutput.Append("\n");
+            segmentOutput.Append('\n');
             segmentOutput.Append("            if ((result != null) && (result.Count() > 0))\n");
             segmentOutput.Append("            {\n");
             segmentOutput.Append("                for (int i = 0; i < result.Count(); i++)\n");
             segmentOutput.Append("                    yield return result[i];\n");
             segmentOutput.Append("            }\n");
             segmentOutput.Append("        }\n");
-            segmentOutput.Append("\n");
+            segmentOutput.Append('\n');
             segmentOutput.Append("        /// <summary>\n");
             segmentOutput.Append(string.Format("        /// Get all {1} Records from {0}\n", typeName, name));
             segmentOutput.Append("        /// </summary>\n");
@@ -248,7 +264,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
             segmentOutput.Append("        {\n");
             segmentOutput.Append(string.Format("            return message.GetAllRecords<{1}>(\"{0}RepetitionsUsed\", \"Get{0}\");\n", name, returnType));
             segmentOutput.Append("        }\n");
-            segmentOutput.Append("\n");
+            segmentOutput.Append('\n');
             segmentOutput.Append("        /// <summary>\n");
             segmentOutput.Append(string.Format("        /// Add a new {0} to {1}\n", name, typeName));
             segmentOutput.Append("        /// </summary>\n");
@@ -259,7 +275,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
 
             if (findFieldMethodExists)
             {
-                segmentOutput.Append("\n");
+                segmentOutput.Append('\n');
                 segmentOutput.Append("        /// <summary>\n");
                 segmentOutput.Append(string.Format("        /// Remove an {0} record from {1}\n", name, typeName));
                 segmentOutput.Append("        /// </summary>\n");
@@ -268,7 +284,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
                 segmentOutput.Append($"            int fieldNum = message.FindField(\"{name}\");\n");
                 segmentOutput.Append($"            message.RemoveRepetition(fieldNum + 1, item);\n");
                 segmentOutput.Append("        }\n");
-                segmentOutput.Append("\n");
+                segmentOutput.Append('\n');
                 segmentOutput.Append("        /// <summary>\n");
                 segmentOutput.Append(string.Format("        /// Remove an {0} record from {1}\n", name, typeName));
                 segmentOutput.Append("        /// </summary>\n");
@@ -294,7 +310,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
             segmentOutput.Append(string.Format("using NHapi.Model.{0}.Segment;\n", version));
             segmentOutput.Append(string.Format("using NHapi.Model.{0}.Datatype;\n", version));
             segmentOutput.Append("using NHapiTools.Base;\n");
-            segmentOutput.Append("\n");
+            segmentOutput.Append('\n');
             segmentOutput.Append(string.Format("namespace NHapiTools.Model.{0}.Segment\n", version));
             segmentOutput.Append("{\n");
             segmentOutput.Append("    /// <summary>\n");
@@ -332,32 +348,36 @@ namespace NHapiTools.Base.ModelToolsGenerator
         #endregion Segments
 
         #region Groups
-
         private void ProcessGroups(List<Type> groupTypes)
         {
             foreach (Type group in groupTypes)
             {
                 List<string> names = GetPropertyNames(group.GetProperties());
-
-                // Generate methods
                 foreach (string name in names)
                 {
-                    MethodInfo mInfo = group.GetMethod(string.Format("Get{0}", name), new Type[] { typeof(int) });
-                    string returnType = mInfo.ReturnType.Name;
+                    MethodInfo mInfo = group.GetMethod($"Get{name}", new Type[] { typeof(int) });
+                    if (mInfo == null)
+                        continue;
 
+                    if (mInfo.GetCustomAttribute<ObsoleteAttribute>() != null)
+                        continue;
+
+                    PropertyInfo repProp = group.GetProperty($"{name}RepetitionsUsed");
+                    if (repProp?.GetCustomAttribute<ObsoleteAttribute>() != null)
+                        continue;
+
+                    string returnType = mInfo.ReturnType.Name;
                     GenerateGroupMethods(group.Name, name, returnType);
                 }
             }
-
             AddGroupFooter();
             SaveGroupFile();
         }
 
         private void GenerateGroupMethods(string typeName, string name, string returnType)
         {
-            bool exists = groupOutput.ToString().Contains(string.Format("public static IEnumerable Get{1}Records(this {0} message)", typeName, name));
-
-            if (exists)
+            string key = $"{typeName}.{name}";
+            if (!_generatedGroups.Add(key))
                 return;
 
             bool first = (groupOutput.Length == 0);
@@ -365,7 +385,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
             if (first)
                 AddGroupHeader();
             else
-                groupOutput.Append("\n");
+                groupOutput.Append('\n');
 
             groupOutput.Append("        /// <summary>\n");
             groupOutput.Append(string.Format("        /// Get {1} Records from {0}\n", typeName, name));
@@ -373,14 +393,14 @@ namespace NHapiTools.Base.ModelToolsGenerator
             groupOutput.Append(string.Format("        public static IEnumerable Get{1}Records(this {0} message)\n", typeName, name));
             groupOutput.Append("        {\n");
             groupOutput.Append(string.Format("            object[] result = message.GetRecords(\"{0}RepetitionsUsed\", \"Get{0}\");\n", name));
-            groupOutput.Append("\n");
+            groupOutput.Append('\n');
             groupOutput.Append("            if ((result != null) && (result.Count() > 0))\n");
             groupOutput.Append("            {\n");
             groupOutput.Append("                for (int i = 0; i < result.Count(); i++)\n");
             groupOutput.Append("                    yield return result[i];\n");
             groupOutput.Append("            }\n");
             groupOutput.Append("        }\n");
-            groupOutput.Append("\n");
+            groupOutput.Append('\n');
             groupOutput.Append("        /// <summary>\n");
             groupOutput.Append(string.Format("        /// Get all {1} Records from {0}\n", typeName, name));
             groupOutput.Append("        /// </summary>\n");
@@ -388,7 +408,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
             groupOutput.Append("        {\n");
             groupOutput.Append(string.Format("            return message.GetAllRecords<{1}>(\"{0}RepetitionsUsed\", \"Get{0}\");\n", name, returnType));
             groupOutput.Append("        }\n");
-            groupOutput.Append("\n");
+            groupOutput.Append('\n');
             groupOutput.Append("        /// <summary>\n");
             groupOutput.Append(string.Format("        /// Add a new {0} to {1}\n", typeName, name));
             groupOutput.Append("        /// </summary>\n");
@@ -412,7 +432,7 @@ namespace NHapiTools.Base.ModelToolsGenerator
             groupOutput.Append(string.Format("using NHapi.Model.{0}.Segment;\n", version));
             groupOutput.Append(string.Format("using NHapi.Model.{0}.Datatype;\n", version));
             groupOutput.Append("using NHapiTools.Base;\n");
-            groupOutput.Append("\n");
+            groupOutput.Append('\n');
             groupOutput.Append(string.Format("namespace NHapiTools.Model.{0}.Group\n", version));
             groupOutput.Append("{\n");
             groupOutput.Append("    /// <summary>\n");
@@ -451,15 +471,12 @@ namespace NHapiTools.Base.ModelToolsGenerator
 
         private List<string> GetPropertyNames(PropertyInfo[] properties)
         {
-            List<string> result = new List<string>();
-
-            List<PropertyInfo> props = properties.Where(p => p.Name.EndsWith("RepetitionsUsed")).ToList();
-            foreach (PropertyInfo p in props)
-                result.Add(p.Name.Remove(p.Name.IndexOf("RepetitionsUsed")));
-
-            return result;
+            return properties
+                .Where(p => p.Name.EndsWith("RepetitionsUsed")
+                         && p.GetCustomAttribute<ObsoleteAttribute>() == null)
+                .Select(p => p.Name.Remove(p.Name.IndexOf("RepetitionsUsed")))
+                .ToList();
         }
-
         #endregion Private methods
     }
 }

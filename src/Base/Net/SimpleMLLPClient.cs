@@ -17,7 +17,7 @@ namespace NHapiTools.Base.Net
     /// A implementation fo easy use: sending HL7 messages over a TCP/IP + MLLP connection
     /// and receiving a reply
     /// </summary>
-    public class SimpleMLLPClient : IDisposable
+    public sealed class SimpleMLLPClient : IDisposable
     {
         #region Private properties
         private string serverHostname;
@@ -87,7 +87,11 @@ namespace NHapiTools.Base.Net
         /// <param name="password">Password of the certificate</param>
         public void AddCertificate(string pathToCertificate, string password)
         {
-            cCollection.Add(new X509Certificate(pathToCertificate, password));
+#if NET9_0_OR_GREATER
+            _ = cCollection.Add(X509CertificateLoader.LoadPkcs12FromFile(pathToCertificate, password));
+#else
+            _ = cCollection.Add(new X509Certificate(pathToCertificate, password));
+#endif
         }
 
         /// <summary>

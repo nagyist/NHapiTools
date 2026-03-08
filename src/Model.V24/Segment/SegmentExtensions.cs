@@ -9380,54 +9380,6 @@ namespace NHapiTools.Model.V24.Segment
         }
 
         /// <summary>
-        /// Get Probability Records from OBX
-        /// </summary>
-        public static IEnumerable GetProbabilityRecords(this OBX message)
-        {
-            object[] result = message.GetRecords("ProbabilityRepetitionsUsed", "GetProbability");
-
-            if ((result != null) && (result.Count() > 0))
-            {
-                for (int i = 0; i < result.Count(); i++)
-                    yield return result[i];
-            }
-        }
-
-        /// <summary>
-        /// Get all Probability Records from OBX
-        /// </summary>
-        public static List<NM> GetAllProbabilityRecords(this OBX message)
-        {
-            return message.GetAllRecords<NM>("ProbabilityRepetitionsUsed", "GetProbability");
-        }
-
-        /// <summary>
-        /// Add a new Probability to OBX
-        /// </summary>
-        public static NM AddProbability(this OBX message)
-        {
-            return message.GetProbability(message.ProbabilityRepetitionsUsed);
-        }
-
-        /// <summary>
-        /// Remove an Probability record from OBX
-        /// </summary>
-        public static void RemoveProbability(this OBX message, NM item)
-        {
-            int fieldNum = message.FindField("Probability");
-            message.RemoveRepetition(fieldNum + 1, item);
-        }
-
-        /// <summary>
-        /// Remove an Probability record from OBX
-        /// </summary>
-        public static void RemoveProbability(this OBX message, int itemIndex)
-        {
-            int fieldNum = message.FindField("Probability");
-            message.RemoveRepetition(fieldNum + 1, itemIndex);
-        }
-
-        /// <summary>
         /// Get NatureOfAbnormalTest Records from OBX
         /// </summary>
         public static IEnumerable GetNatureOfAbnormalTestRecords(this OBX message)

@@ -10,7 +10,7 @@ namespace NHapiTools.Generator
         static void Main(string[] args)
         {
             var nhapiDllDir = args.Length == 0 ? BaseDirectory : args[0];
-            var rootDir = BaseDirectory.Remove(BaseDirectory.IndexOf(Path.Combine("tools", typeof(Program).Namespace), StringComparison.Ordinal));
+            var rootDir = BaseDirectory[..BaseDirectory.IndexOf(Path.Combine("tools", typeof(Program).Namespace), StringComparison.Ordinal)];
             var outDir = Path.Combine(rootDir, "src");
 
             if (string.IsNullOrWhiteSpace(nhapiDllDir))

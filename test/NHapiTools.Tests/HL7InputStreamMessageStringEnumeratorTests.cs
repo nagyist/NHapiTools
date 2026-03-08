@@ -32,8 +32,10 @@ namespace NHapiTools.Tests
 
             Console.WriteLine("{0} files found.", expectedFilesRead);
 
-            var multipleFilesStream = new MultipleFilesStream(directoryInfo);
-            multipleFilesStream.FileEndMarker = '\n';
+            var multipleFilesStream = new MultipleFilesStream(directoryInfo)
+            {
+                FileEndMarker = '\n'
+            };
             multipleFilesStream.FileCompleted += (o, e) =>
             {
                 Console.WriteLine("\nMessages Read from {0}", Path.GetFileName(e.FileName));
