@@ -28,7 +28,7 @@ jobs:
 
     - name: Run tests for all target frameworks
       run: | 
-        dotnet test -c Debug -f net10.0 --no-restore -r TestResults
+        dotnet test -c Debug -f net10.0 --no-restore --results-directory TestResults
 
     - name: NuGet Pack
       run: NuGet.exe pack NHapiTools.nuspec
