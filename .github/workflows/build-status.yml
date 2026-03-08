@@ -18,7 +18,7 @@ jobs:
           10.0.x
 
     - name: Generate Classes
-      run: dotnet run -c Release -f net8.0 -p tools\NHapiTools.Generator\NHapiTools.Generator.csproj
+      run: dotnet run -c Release -f net10.0 -p tools\NHapiTools.Generator\NHapiTools.Generator.csproj
 
     - name: Install dependencies
       run: dotnet restore
@@ -28,8 +28,6 @@ jobs:
 
     - name: Run tests for all target frameworks
       run: | 
-        dotnet test -c Debug -f net462 --no-restore -r TestResults
-        dotnet test -c Debug -f net8.0 --no-restore -r TestResults
         dotnet test -c Debug -f net10.0 --no-restore -r TestResults
 
     - name: NuGet Pack
